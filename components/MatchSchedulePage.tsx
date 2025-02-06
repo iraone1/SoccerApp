@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
 import { Calendar } from 'react-native-calendars';
+import Loading from './Loading';
 
 export default function MatchSchedulePage({ route }) {
     const { leagueId } = route.params;
@@ -95,8 +96,8 @@ export default function MatchSchedulePage({ route }) {
 </View>
 
             {isLoading ? (
-                <ActivityIndicator size="large" color="#000" style={styles.loader} />
-            ) : filteredMatches.length > 0 ? (
+<Loading/>
+) : filteredMatches.length > 0 ? (
                 <FlatList
                     style={{ marginTop: 30 }}
                     data={filteredMatches}
