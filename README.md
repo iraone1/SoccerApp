@@ -1,4 +1,4 @@
-![alt text](https://github.com/iraone1/SoccerApp/blob/main/assets/B1%20(1).jpg?raw=true)
+![alt text]([https://github.com/iraone1/SoccerApp/blob/main/assets/B1%20(1).jpg](https://github.com/iraone1/SoccerApp/blob/main/assets/B1%20(1)%20(1).jpg)?raw=true)
 <<<<<<< HEAD
 This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
 
