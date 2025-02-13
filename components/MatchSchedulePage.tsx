@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, Dimensions, ImageBackground } from 'react-native';
 import { Calendar } from 'react-native-calendars';
 import Loading from './Loading';
+import { ScrollView } from 'react-native-gesture-handler';
+
+const { width, height } = Dimensions.get('window');
 
 export default function MatchSchedulePage({ route }) {
     const { leagueId } = route.params;
@@ -26,19 +29,12 @@ export default function MatchSchedulePage({ route }) {
             setMatches(json.matches);
             setIsLoading(false);
 
-            // Tandai tanggal pertandingan di kalender dengan label "Match"
             const matchDates = {};
             json.matches.forEach((match) => {
                 if (match.utcDate) {
-                    const matchDate = new Date(match.utcDate);
-                    matchDate.setHours(matchDate.getHours() + 7); // Add 7 hours for WIB
-
-                    const localDate = matchDate.toISOString().split('T')[0]; // Get the local date part
-
+                    const localDate = new Date(match.utcDate).toISOString().split('T')[0];
                     matchDates[localDate] = {
-                        dots: [
-                            { key: 'match', color: 'blue', legendText: 'Match' }, // Menampilkan teks di bawah tanggal
-                        ],
+                        dots: [{ key: 'match', color: 'blue' }],
                         selected: false,
                     };
                 }
@@ -50,114 +46,141 @@ export default function MatchSchedulePage({ route }) {
             console.error("Fetch error:", error);
             setIsLoading(false);
         });
-    }, [leagueId, apiKey]);
+    }, [leagueId]);
 
-    // Filter pertandingan berdasarkan tanggal yang dipilih
-    const filteredMatches = matches.filter((match) => match.utcDate?.startsWith(selectedDate));
+    const filteredMatches = matches.filter((match) => {
+        return new Date(match.utcDate).toISOString().split('T')[0] === selectedDate;
+    });
 
     const renderMatchItem = ({ item }) => {
         const matchDate = item.utcDate ? new Date(item.utcDate).toLocaleString() : "Tanggal tidak tersedia";
         return (
             <View style={styles.matchCard}>
-                <Text style={styles.matchText}>
-                    {item.homeTeam?.name} vs {item.awayTeam?.name}
-                </Text>
+                <View style={styles.matchRow}>
+                    <Image source={{ uri: `https://crests.football-data.org/${item.homeTeam?.id}.png` }} style={styles.teamLogo} resizeMode="contain" />
+                    <Text style={[styles.matchText, { flex: 2, textAlign: 'right' }]} numberOfLines={1}>{item.homeTeam?.name}</Text>
+                    <Text style={[styles.matchText, { flex: 1, textAlign: 'center', fontWeight: 'bold' }]}>Vs</Text>
+                    <Text style={[styles.matchText, { flex: 2, textAlign: 'left' }]} numberOfLines={1}>{item.awayTeam?.name}</Text>
+                    <Image source={{ uri: `https://crests.football-data.org/${item.awayTeam?.id}.png` }} style={styles.teamLogo} resizeMode="contain" />
+                </View>
                 <Text style={styles.matchTime}>{matchDate}</Text>
             </View>
         );
     };
-
-    return (
+return (
+    <ImageBackground source={require('../assets/istockphoto-185007737-612x612.jpg')} style={styles.background}>
         <View style={styles.container}>
-            <Text style={styles.title}>Jadwal Pertandingan</Text>
-
-            {/* Kalender untuk memilih tanggal */}
-      <View style={styles.calendarWrapper}>
-    <Calendar
-        markingType="multi-dot"
-        markedDates={{
-            ...markedDates,
-            [selectedDate]: { selected: true, selectedColor: 'blue' },
-        }}
-        onDayPress={(day) => setSelectedDate(day.dateString)}
-        theme={{
-            backgroundColor: 'transparent',
-            calendarBackground: '#f0f0f0', // Background of the calendar
-            textSectionTitleColor: '#b6c1cd',
-            selectedDayBackgroundColor: 'blue',
-            selectedDayTextColor: 'white',
-            todayTextColor: '#00adf5',
-            dayTextColor: '#2d4150',
-            arrowColor: 'blue',
-            monthTextColor: 'blue',
-            indicatorColor: 'blue',
-        }}
-    />
-</View>
-
             {isLoading ? (
-<Loading/>
-) : filteredMatches.length > 0 ? (
-                <FlatList
-                    style={{ marginTop: 30 }}
-                    data={filteredMatches}
-                    keyExtractor={(item) => item.id.toString()}
-                    renderItem={renderMatchItem}
-                />
+                <View style={styles.loadingContainer}>
+                    <Loading />
+                </View>
             ) : (
-                <Text style={styles.noMatchText}>Tidak ada Jadwal pertandingan !</Text>
+                <ScrollView>
+                    <View style={styles.calendarWrapper}>
+                        <Calendar
+                            markingType="multi-dot"
+                            markedDates={{
+                                ...markedDates,
+                                [selectedDate]: { selected: true, selectedColor: 'blue' },
+                            }}
+                            onDayPress={(day) => setSelectedDate(day.dateString)}
+                            theme={{
+                                backgroundColor: 'transparent',
+                                calendarBackground: '#f0f0f0',
+                                textSectionTitleColor: '#b6c1cd',
+                                selectedDayBackgroundColor: 'blue',
+                                selectedDayTextColor: 'white',
+                                todayTextColor: '#00adf5',
+                                dayTextColor: '#2d4150',
+                                arrowColor: 'blue',
+                                monthTextColor: 'blue',
+                                indicatorColor: 'blue',
+                            }}
+                        />
+                    </View>
+                    {filteredMatches.length > 0 ? (
+                        <FlatList
+                            nestedScrollEnabled={true}
+                            style={{ marginTop: height * 0.03 }}
+                            data={filteredMatches}
+                            keyExtractor={(item) => item.id.toString()}
+                            renderItem={renderMatchItem}
+                        />
+                    ) : (
+                        <Text style={styles.noMatchText}>Tidak ada Jadwal pertandingan !</Text>
+                    )}
+                </ScrollView>
             )}
         </View>
-    );
+    </ImageBackground>
+);
+
 }
 
 const styles = StyleSheet.create({
-    calendarWrapper: {
-        borderRadius: 10, // Set your desired borderRadius here
-        overflow: 'hidden', // Ensures the borderRadius applies to the content inside
-        backgroundColor: 'black', // Optional: you can set a background color for the wrapper
-        marginTop: 20, // Optional: add margin if needed
-    },
     container: {
         flex: 1,
-        padding: 16,
-        backgroundColor: 'gray',
+        padding: width * 0.04,
+        backgroundColor: 'rgba(0, 0, 0, 0.3)',
+       
     },
+    loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+},
+
+
     title: {
-        fontSize: 24,
+        fontSize: width * 0.06,
         fontWeight: 'bold',
-        marginBottom: 20,
-        color: '#333',
+        marginBottom: height * 0.02,
+        color: '#ffffff',
         textAlign: 'center',
     },
     matchCard: {
         backgroundColor: 'white',
-        padding: 15,
-        marginBottom: 10,
+        padding: width * 0.04,
+        marginBottom: height * 0.015,
         borderRadius: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 5,
         elevation: 3,
     },
     matchText: {
-        fontSize: 18,
+        fontSize: width * 0.035,
         fontWeight: 'bold',
+        color: '#111111',
     },
     matchTime: {
-        fontSize: 14,
-        color: '#888',
-    },
-    loader: {
-        flex: 1,
-        justifyContent: 'center',
-        alignItems: 'center',
+        fontSize: width * 0.04,
+        color: '#1e1c1c',
+        textAlign: 'center',
     },
     noMatchText: {
-        fontSize: 16,
+        fontSize: width * 0.04,
         textAlign: 'center',
-        color: '#888',
-        marginTop: 20,
+        color: '#ffffff',
+        marginTop: height * 0.02,
+    },
+     background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
+    matchRow: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        marginBottom: height * 0.01,
+        paddingHorizontal: width * 0.04,
+    },
+    teamLogo: {
+        width: width * 0.08,
+        height: width * 0.08,
+        marginHorizontal: width * 0.02,
+    },
+    calendarWrapper: {
+        borderRadius: 10,
+        overflow: 'hidden',
+        backgroundColor: 'black',
+        marginTop: height * 0.02,
     },
 });

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, Image, TouchableOpacity, StyleSheet, ActivityIndicator, ImageBackground } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Loading from './Loading';
 
@@ -46,13 +46,18 @@ const FootballNewsPage = () => {
   );
 
   return (
-    <View style={styles.container}>
+        <ImageBackground source={require('../assets/istockphoto-185007737-612x612.jpg')}style={styles.background}><View style={styles.container}>
       {isLoading ? (
 <Loading/>
 ) : (
-        <FlatList data={news} keyExtractor={(item) => item.url} renderItem={renderBerita} />
+        <FlatList 
+        data={news} 
+        keyExtractor={(item) => item.url} 
+        renderItem={renderBerita} />
       )}
     </View>
+   </ImageBackground>
+    
   );
 };
 
@@ -60,7 +65,8 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     padding: 20,
-    backgroundColor: 'gray',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+   
   },
   loadingContainer: {
     flex: 1,
@@ -71,6 +77,10 @@ const styles = StyleSheet.create({
     marginTop: 10,
     fontSize: 16,
     color: 'white',
+  },
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
   },
   card: {
     backgroundColor: 'white',

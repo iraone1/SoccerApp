@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Image, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Image, TouchableOpacity, ImageBackground } from 'react-native';
 import Loading from './Loading';
 
 export default function DetailPage({ route, navigation }) {
   const { leagueId } = route.params;
-  const [leagueName, setLeagueName] = useState(''); // State untuk nama liga
+  const [leagueName, setLeagueName] = useState('');
   const [teams, setTeams] = useState([]);
   const [klasmen, setKlasmen] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -22,7 +22,7 @@ export default function DetailPage({ route, navigation }) {
     ])
       .then(([standingsResponse, teamsResponse]) => {
         if (standingsResponse.competition) {
-          setLeagueName(standingsResponse.competition.name); // Set nama liga dari API
+          setLeagueName(standingsResponse.competition.name);
         }
         setKlasmen(standingsResponse.standings[0].table);
         setTeams(teamsResponse.teams);
@@ -53,55 +53,57 @@ export default function DetailPage({ route, navigation }) {
     </View>
   );
 
-
   return (
-    
-    <View style={styles.container}>
-        {isLoading?(<Loading/>):(
+    <ImageBackground source={require('../assets/istockphoto-185007737-612x612.jpg')} style={styles.background}>
+      <View style={styles.container}>
+        {isLoading ? (
+          <Loading />
+        ) : (
           <>
-        <Text style={styles.title}>{leagueName}</Text> 
+            <Text style={styles.title}>{leagueName}</Text>
 
-     
-      <Text style={styles.subtitle}>Team</Text>
-      <View style={styles.teamList}>
-        <FlatList 
-          data={teams}
-          keyExtractor={(item) => item.id.toString()}
-          renderItem={renderTeam}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          nestedScrollEnabled={true}
-        />
+            <Text style={styles.subtitle}>Team</Text>
+            <View style={styles.teamList}>
+              <FlatList 
+                data={teams}
+                keyExtractor={(item) => item.id.toString()}
+                renderItem={renderTeam}
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                nestedScrollEnabled={true}
+              />
+            </View>
+
+            <Text style={styles.subtitle}>Tabel Klasmen</Text>
+            <FlatList
+              data={klasmen}
+              keyExtractor={(item) => item.team.id.toString()}
+              renderItem={renderKlasmen}
+             
+              ListHeaderComponent={
+                <View style={styles.tableHeader}>
+                  <Text style={[styles.headerText, { flex: 3 }]}>Team</Text>
+                  <Text style={[styles.headerText, { flex: 1 }]}>Won</Text>
+                  <Text style={[styles.headerText, { flex: 1 }]}>Lost</Text>
+                  <Text style={[styles.headerText, { flex: 1 }]}>Points</Text>
+                </View>
+              }
+            />
+          </>
+        )}
       </View>
-
-      <Text style={styles.subtitle}>Tabel Klasmen</Text>
-      <FlatList
-        data={klasmen}
-        keyExtractor={(item) => item.team.id.toString()}
-        renderItem={renderKlasmen}
-        nestedScrollEnabled={true}
-        ListHeaderComponent={
-          <View style={styles.tableHeader}>
-            <Text style={[styles.headerText, { flex: 3 }]}>Team</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Won</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Lost</Text>
-            <Text style={[styles.headerText, { flex: 1 }]}>Points</Text>
-          </View>
-        }
-      />
-
-      </>)
-}
-    </View>
+    </ImageBackground>
   );
 }
 
-
 const styles = StyleSheet.create({
+  background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
   container: {
     flex: 1,
-    padding: 10,
-    backgroundColor: 'gray',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)', // Memberikan efek transparan pada background
   },
   title: {
     fontSize: 24,
@@ -140,12 +142,11 @@ const styles = StyleSheet.create({
   tableHeader: {
     flexDirection: 'row',
     backgroundColor: '#ddd',
-    borderBottomWidth: 2,
-    borderBottomColor: '#a29a9a',
+    
     paddingVertical: 8,
     paddingHorizontal: 10,
     alignItems: 'center',
-    marginHorizontal: 10,
+    marginHorizontal: 12,
   },
   headerText: {
     fontSize: 16,
@@ -154,14 +155,13 @@ const styles = StyleSheet.create({
     textAlign: 'center',
   },
   tableRow: {
-   marginHorizontal:10,
+    marginHorizontal: 10,
     flexDirection: 'row',
     borderWidth: 2,
-   
     paddingVertical: 10,
     paddingHorizontal: 10,
     alignItems: 'center',
-    backgroundColor:'white',
+    backgroundColor: 'white',
   },
   rowText: {
     fontSize: 16,
@@ -178,5 +178,4 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
-
 });

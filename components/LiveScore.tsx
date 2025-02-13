@@ -1,22 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { View, Text, FlatList, StyleSheet, ActivityIndicator, Dimensions, TouchableOpacity } from 'react-native';
+import { View, Text, FlatList, StyleSheet, Dimensions, TouchableOpacity, ImageBackground } from 'react-native';
 import Loading from './Loading';
 
 const { width } = Dimensions.get('window');
+const apiKey = '761e7fe919cb1a6d01dde37cadd27fd7'; // Ganti dengan API Key yang valid
 
 export default function LiveScore({ navigation }) {
     const [liveScores, setLiveScores] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const apiKey = '761e7fe919cb1a6d01dde37cadd27fd7'; // Ganti dengan API Key yang valid
 
     useEffect(() => {
         const fetchLiveScores = async () => {
             try {
                 const response = await fetch('https://v3.football.api-sports.io/fixtures?live=all', {
                     method: 'GET',
-                    headers: {
-                        'x-apisports-key': apiKey,
-                    },
+                    headers: { 'x-apisports-key': apiKey },
                 });
                 const data = await response.json();
                 if (data.response) {
@@ -42,51 +40,68 @@ export default function LiveScore({ navigation }) {
         const awayScore = item.goals?.away ?? 0;
         const matchTime = item.fixture?.status?.elapsed ?? 0;
         const leagueName = item.league?.name || 'Unknown League';
-        const isHighlighted = matchTime > 0 && matchTime < 90; // Highlight untuk pertandingan yang sedang berlangsung
+        const matchStatus = item.fixture?.status?.short;
+        const isOngoing = matchStatus !== 'FT' && matchStatus !== 'NS';
+        const isHighlighted = isOngoing && matchTime > 0 && matchTime < 90;
 
         return (
             <View style={[styles.liveScoreCard, isHighlighted && styles.highlightedMatch]}>
-                <Text style={styles.leagueName}>{leagueName}</Text>
-                <View>
-                <Text style={styles.matchTime}> Min</Text>
                 
+                <Text style={styles.leagueName}>{leagueName}</Text>
+                
+                <View style={styles.teamScoreContainer}>
+                    <Text style={styles.team}>{homeTeam}</Text>
+                    <Text style={styles.team}>Vs</Text>
+                    <Text style={styles.team}>{awayTeam}</Text>
                 </View>
-                <Text style={styles.team}>{homeTeam} {homeScore} Vs {awayScore} {awayTeam}</Text>
-              <Text style={styles.team1}> {homeScore} - {awayScore} </Text>
-             
-             <TouchableOpacity
-                    style={styles.detailButton}
-                    onPress={() => navigation.navigate('MatchDetail', { matchId: item.fixture.id })}
-                >
-                    <Text style={styles.detailButtonText}>Lihat Detail</Text>
-                </TouchableOpacity>
+                <Text style={styles.score}>{homeScore} - {awayScore}</Text>
+                <Text style={isOngoing ? styles.matchTime : styles.finishedText}>
+                    {isOngoing ? `${matchTime} Min` : 'Pertandingan Selesai'}
+                </Text>
+                
+                <View style={{flexDirection:'row',justifyContent:'space-between',gap:5}}>
+                <TouchableOpacity
+    style={styles.detailButton}
+    onPress={() => navigation.navigate('MatchDetail', { matchId: item.fixture.id })}
+>
+    <Text style={styles.detailButtonText}>Statistik</Text>
+</TouchableOpacity>
+
+
+<TouchableOpacity
+    style={styles.detailButton}
+    onPress={() => navigation.navigate('MatchTimeline', { matchId: item.fixture.id })}
+>
+    <Text style={styles.detailButtonText}>Timeline</Text>
+</TouchableOpacity>
+</View>
+
             </View>
-            
-        );
+            );
     };
 
     return (
+        <ImageBackground source={require('../assets/istockphoto-185007737-612x612.jpg')} style={styles.background}>
+            
         <View style={styles.container}>
-            
             {isLoading ? (
-               <Loading/>
+                <Loading />
             ) : liveScores.length > 0 ? (
-            <View>
-            <Text style={styles.title}>Live Skor Pertandingan</Text>
-            
                 <FlatList
                     data={liveScores}
                     keyExtractor={(item) => item.fixture?.id?.toString() || Math.random().toString()}
                     renderItem={renderLiveScore}
                     showsVerticalScrollIndicator={false}
+                    ListHeaderComponent={<Text style={styles.title}>Live Skor Pertandingan</Text>}
                 />
-                </View>
             ) : (
-                <View style={{flex:1,justifyContent:'center'}}>
+                <View style={{flex:1,alignItems:'center',justifyContent:'center'}}>
                 <Text style={styles.noDataText}>Tidak ada pertandingan yang sedang berlangsung</Text>
             </View>
             )}
         </View>
+        </ImageBackground>
+        
     );
 }
 
@@ -94,19 +109,8 @@ const styles = StyleSheet.create({
     container: {
         flex: 1,
         padding: 16,
-        alignItems: 'center',
-        backgroundColor: 'gray',
-    },
-     detailButton: {
-        marginTop: 10,
-        padding: 10,
-        backgroundColor: '#007BFF',
-        borderRadius: 5,
-    },
-    detailButtonText: {
-        color: '#fff',
-        fontSize: 16,
-        fontWeight: 'bold',
+        alignItems: 'center',backgroundColor: 'rgba(0, 0, 0, 0.3)',
+     
     },
     title: {
         fontSize: 22,
@@ -127,40 +131,67 @@ const styles = StyleSheet.create({
         borderColor: '#ddd',
     },
     matchTime: {
+        fontSize: 24,
+        fontWeight: 'bold',
+        marginBottom:10,
+        color: '#000',
+   
+    },
+    finishedText: {
         fontSize: 16,
         fontWeight: 'bold',
-        color: 'red',
+        color: 'green',
     },
     highlightedMatch: {
         borderColor: 'gold',
         borderWidth: 3,
         backgroundColor: '#fff8dc',
     },
+    teamScoreContainer: {
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        width: '100%',
+        alignItems: 'center',
+    },
     team: {
-        fontSize: 18,
+        fontSize: 26,
         fontWeight: 'bold',
         color: '#333',
-    },
-    team1: {
-        fontSize: 14,
-        color: '#333',
+        flex: 1, // Ensures both team names take equal space
         textAlign: 'center',
+    },
+    score: {
+        fontSize: 20,
+        color: '#000000',
+        textAlign: 'center',
+        marginBottom: 10,
         
     },
     leagueName: {
-        fontSize: 20,
+        fontSize: 28,
         fontWeight: 'bold',
         color: '#353030',
-        marginBottom: 5,
+        marginBottom: 15,
+    },
+    detailButton: {
+        marginTop: 10,
+        padding: 10,
+        backgroundColor: '#007BFF',
+        borderRadius: 5,
+    },
+    detailButtonText: {
+        color: '#fff',
+        fontSize: 16,
+        fontWeight: 'bold',
     },
     noDataText: {
-        
         textAlign: 'center',
-     
-        fontSize: 24,
+        fontSize: 20,
         color: '#fff',
-    },
-    loader: {
         marginTop: 20,
     },
+     background: {
+    flex: 1,
+    resizeMode: 'cover',
+  },
 });
