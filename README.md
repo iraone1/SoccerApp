@@ -1,4 +1,4 @@
-<div style="display: flex; flex-direction: column; align-items: center; gap: 50px;">
+<div style="display: flex; flex-direction: column; align-items: center; gap: 100px;">
   <img src="https://github.com/iraone1/SoccerApp/blob/main/assets/b5%20(1)%20(1).jpg?raw=true" width="300">
   <img src="https://github.com/iraone1/SoccerApp/blob/main/assets/B1%20(1)%20(4).jpg?raw=true" width="300">
   <img src="https://github.com/iraone1/SoccerApp/blob/main/assets/b2%20(1)%20(1).jpg?raw=true" width="300">
